@@ -1,3 +1,5 @@
+github.com/vktec/htmlparse v0.0.0-20201212220732-bd458d57b27f h1:MDCr574inB5G/beVEnM0f77c85tGqgU7cMcsxNRrydk=
+github.com/vktec/htmlparse v0.0.0-20201212220732-bd458d57b27f/go.mod h1:64c3pnx783dIEzkAu6FpYiNMlmENO8eDU0ZExCl5l9k=
 golang.org/x/net v0.0.0-20201209123823-ac852fbbde11 h1:lwlPPsmjDKK0J6eG6xDWd5XPehI0R024zxjDnw3esPA=
 golang.org/x/net v0.0.0-20201209123823-ac852fbbde11/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
