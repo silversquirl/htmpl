@@ -1,6 +1,7 @@
 package htmpl
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -142,27 +143,58 @@ func getAttr(node *html.Node, key string) string {
 }
 
 func (eval *evaluator) get(pathString string) reflect.Value {
-	path := strings.Split(pathString, ".")
-	for i, part := range path {
-		path[i] = strings.Trim(part, " \t\r\n")
+	v, _ := eval.get_([]byte(strings.Trim(pathString, " \t\r\n")), false)
+	return v
+}
+func (eval *evaluator) get_(pbytes []byte, nested bool) (reflect.Value, []byte) {
+	var path []string
+	if pbytes[0] == '.' {
+		path = append(path, ".")
+		pbytes = pbytes[1:]
 	}
 
-	if path[0] == "" {
-		if len(path) == 1 {
-			return reflect.Value{}
+parseLoop:
+	for {
+		idx := bytes.IndexAny(pbytes, ".[]")
+		if idx < 0 {
+			if nested {
+				return reflect.Value{}, nil
+			} else {
+				if len(pbytes) > 0 {
+					path = append(path, string(pbytes))
+					pbytes = nil
+				}
+				break
+			}
 		}
 
-		path[0] = "."
-		if path[1] == "" {
-			path = path[:1]
+		prebytes := pbytes[:idx]
+		sep := pbytes[idx]
+		pbytes = pbytes[idx+1:]
+
+		switch sep {
+		case '.':
+			path = append(path, string(prebytes))
+		case '[':
+			var v reflect.Value
+			v, pbytes = eval.get_(pbytes, true)
+			path = append(path, stringify(v))
+		case ']':
+			if nested {
+				break parseLoop
+			} else {
+				return reflect.Value{}, nil
+			}
 		}
 	}
 
-	// TODO: bracketed keys
+	if len(path) == 0 {
+		return reflect.Value{}, nil
+	}
 
 	vals := eval.vars[path[0]]
 	if len(vals) == 0 {
-		return reflect.Value{}
+		return reflect.Value{}, nil
 	}
 	v := vals[len(vals)-1]
 
@@ -172,7 +204,7 @@ func (eval *evaluator) get(pathString string) reflect.Value {
 			break
 		}
 	}
-	return v
+	return v, pbytes
 }
 
 func (eval *evaluator) push(varName string, v reflect.Value) {
