@@ -38,6 +38,7 @@ VARIABLES
 ---------
 
 Variables are values with names.
+Valid variable names include `.`, `$` and any sequence of alphanumeric or `_` characters.
 When a template is evaluated, the variables `.` and `$` are set to the provided value.
 
 ### Variable paths
