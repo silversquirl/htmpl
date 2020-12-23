@@ -251,4 +251,15 @@ func TestStringifyNode(t *testing.T) {
 	`, `
 		&lt;h1&gt;&lt;/h1&gt;
 	`)
+	testFrag(t, []*html.Node{
+		&html.Node{Type: html.ElementNode, DataAtom: atom.H1, Data: "h1"},
+		&html.Node{Type: html.ElementNode, DataAtom: atom.H2, Data: "h2"},
+		&html.Node{Type: html.ElementNode, DataAtom: atom.H3, Data: "h3"},
+	}, `
+		<v>.</v>
+	`, `
+		&lt;h1&gt;&lt;/h1&gt;
+		&lt;h2&gt;&lt;/h2&gt;
+		&lt;h3&gt;&lt;/h3&gt;
+	`)
 }
