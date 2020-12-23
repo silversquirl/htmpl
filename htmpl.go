@@ -255,9 +255,29 @@ func unwrap(v reflect.Value) reflect.Value {
 	return v
 }
 
+func nodes(v reflect.Value) ([]*html.Node, bool) {
+	if !v.CanInterface() {
+		return nil, false
+	}
+	iface := v.Interface()
+	switch iv := iface.(type) {
+	case html.Node:
+		return []*html.Node{&iv}, true
+	case []*html.Node:
+		return iv, true
+	}
+	return nil, false
+}
 func stringify(v reflect.Value) string {
 	if !v.IsValid() {
 		return ""
+	}
+	if n, ok := nodes(v); ok {
+		b := strings.Builder{}
+		for _, node := range n {
+			html.Render(&b, node)
+		}
+		return b.String()
 	}
 	return fmt.Sprint(v) // TODO: improve this
 }

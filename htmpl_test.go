@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 var nltabRemover = strings.NewReplacer("\n", "", "\t", "")
@@ -240,5 +241,14 @@ func TestLet(t *testing.T) {
 		{
 			faz
 		}
+	`)
+}
+
+// Node values should be stringified to HTML
+func TestStringifyNode(t *testing.T) {
+	testFrag(t, html.Node{Type: html.ElementNode, DataAtom: atom.H1, Data: "h1"}, `
+		<v>.</v>
+	`, `
+		&lt;h1&gt;&lt;/h1&gt;
 	`)
 }
