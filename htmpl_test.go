@@ -263,3 +263,30 @@ func TestStringifyNode(t *testing.T) {
 		&lt;h3&gt;&lt;/h3&gt;
 	`)
 }
+
+// <v> with noescape should unescape HTML
+func TestNoescape(t *testing.T) {
+	testFrag(t, "<h1>foo</h1>", `
+		<div><v noescape>.</v></div>
+	`, `
+		<div><h1>foo</h1></div>
+	`)
+	testFrag(t, html.Node{Type: html.ElementNode, DataAtom: atom.H1, Data: "h1"}, `
+		<div><v noescape>.</v></div>
+	`, `
+		<div><h1></h1></div>
+	`)
+	testFrag(t, []*html.Node{
+		&html.Node{Type: html.ElementNode, DataAtom: atom.H1, Data: "h1"},
+		&html.Node{Type: html.ElementNode, DataAtom: atom.H2, Data: "h2"},
+		&html.Node{Type: html.ElementNode, DataAtom: atom.H3, Data: "h3"},
+	}, `
+		<div><v noescape>.</v></div>
+	`, `
+		<div>
+			<h1></h1>
+			<h2></h2>
+			<h3></h3>
+		</div>
+	`)
+}

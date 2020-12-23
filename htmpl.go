@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/vktec/htmlparse"
 	"golang.org/x/net/html"
 )
 
@@ -47,8 +48,8 @@ func (eval *evaluator) eval(node *html.Node) []*html.Node {
 			return eval.iterate(node, eval.v(node))
 
 		case "let":
-			varName := getAttr(node, "var")
-			valPath := getAttr(node, "val")
+			varName, _ := getAttr(node, "var")
+			valPath, _ := getAttr(node, "val")
 			eval.push(varName, eval.get(valPath))
 			nodes := eval.children(node)
 			eval.pop(varName)
@@ -58,8 +59,25 @@ func (eval *evaluator) eval(node *html.Node) []*html.Node {
 			// FIXME: should handle multiple child nodes
 			if node.FirstChild != nil && node.FirstChild.Type == html.TextNode {
 				path := node.FirstChild.Data
-				v := stringify(eval.get(path))
-				return []*html.Node{&html.Node{Type: html.TextNode, Data: v}}
+				v := eval.get(path)
+				if _, ok := getAttr(node, "noescape"); ok {
+					if n, ok := nodes(v); ok {
+						return n
+					} else {
+						p := html.Node{}
+						htmlparse.Parse(&p, []byte(stringify(v)))
+						var children []*html.Node
+						for child := p.FirstChild; child != nil; child = child.NextSibling {
+							child.Parent = nil
+							child.NextSibling = nil
+							child.PrevSibling = nil
+							children = append(children, child)
+						}
+						return children
+					}
+				} else {
+					return []*html.Node{&html.Node{Type: html.TextNode, Data: stringify(v)}}
+				}
 			} else {
 				return nil
 			}
@@ -131,15 +149,16 @@ func (eval *evaluator) iterate(node *html.Node, v reflect.Value) (nodes []*html.
 }
 
 func (eval *evaluator) v(node *html.Node) reflect.Value {
-	return eval.get(getAttr(node, "v"))
+	v, _ := getAttr(node, "v")
+	return eval.get(v)
 }
-func getAttr(node *html.Node, key string) string {
+func getAttr(node *html.Node, key string) (string, bool) {
 	for _, attr := range node.Attr {
 		if attr.Key == key {
-			return attr.Val
+			return attr.Val, true
 		}
 	}
-	return ""
+	return "", false
 }
 
 func (eval *evaluator) get(pathString string) reflect.Value {
@@ -147,6 +166,9 @@ func (eval *evaluator) get(pathString string) reflect.Value {
 	return v
 }
 func (eval *evaluator) get_(pbytes []byte, nested bool) (reflect.Value, []byte) {
+	if len(pbytes) == 0 {
+		return reflect.Value{}, nil
+	}
 	var path []string
 	if pbytes[0] == '.' {
 		path = append(path, ".")
